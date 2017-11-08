@@ -1,0 +1,20 @@
+Cobra - Notifcation / reminder daemon, written in C++ - version 1.0
+
+Usage: ./cobrac [options]
+  -r REMINDER: add a new reminder with title REMINDER [default: "(Generic Reminder)"]
+  -t TIME: add a new reminder according to time string r'[0-9]+[hms]' [default: "60m"]
+  -a ACTION: add a new reminder with a "Handle" button that executes the command ACTION [default: ""]
+  -n: starts cobra in no-input mode; displays a list of active alarms without user interaction enabled (uses less resources)
+  -d: starts cobra in daemon mode; disables all user input and terminal output, just handles alarm creation and expiration (uses minimal resources)
+
+The -r, -t, and -a options all launch an interactive instance of cobra if cobra is not already running.
+
+The above options also all create alarms; missing options will use default settings
+
+The -n and -d options will fail if an instance of cobra is already running.
+
+Interactive navigation:
+  Up and down: scroll through alarms
+  x: delete a dismissed alarm permanently
+  n: display an alarm immediately and set its status to "dismissed"
+  q: quit interactive mode
