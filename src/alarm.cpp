@@ -12,12 +12,14 @@ Alarm::Alarm(const Json::Value jroot) {
 
   this->action = this->j["action"].asString();
 
+  this->icon = this->j["icon"].asString();
+
   this->dismissed = this->j["dismissed"].asBool();
 
   _initAlarm();
 }
 
-Alarm::Alarm(const std::string reminder, const std::string timeString, const std::string action) {
+Alarm::Alarm(const std::string reminder, const std::string timeString, const std::string action, const std::string icon) {
   Json::Value jroot;
   this->j = jroot;
 
@@ -31,6 +33,9 @@ Alarm::Alarm(const std::string reminder, const std::string timeString, const std
 
   this->action = action;
   this->j["action"] = action;
+
+  this->icon = icon;
+  this->j["icon"] = icon;
 
   this->dismissed = false;
   _initAlarm();
@@ -47,7 +52,8 @@ void Alarm::showReminder(const int id) const {
     id,
     this->j["reminder"].asString(),
     "Reminder",
-    this->j["action"].asString()
+    this->j["action"].asString(),
+    this->j["icon"].asString()
   );
 }
 

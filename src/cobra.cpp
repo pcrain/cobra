@@ -57,10 +57,11 @@ namespace cobra {
     std::string newString = "(Generic Reminder)";
     std::string newTime = "60m";  //Defaults to 1 hour
     std::string newAction = "";
+    std::string newIcon = "";
 
     int opt;
     opterr = 0; // Shut GetOpt error messages down (return '?')
-    while ( (opt = getopt(argc, argv, "r:a:t:dn")) != -1 ) {
+    while ( (opt = getopt(argc, argv, "r:a:i:t:dn")) != -1 ) {
       switch ( opt ) {
         case 'r':
           newString = optarg;
@@ -70,6 +71,9 @@ namespace cobra {
           addAlarm = true; break;
         case 'a':
           newAction = optarg;
+          addAlarm = true; break;
+        case 'i':
+          newIcon = optarg;
           addAlarm = true; break;
         case 'n':
           noinput = true;
@@ -85,7 +89,7 @@ namespace cobra {
 
     if (addAlarm) {
       std::vector<Alarm> newalarms;
-      newalarms.push_back(Alarm(newString,newTime,newAction));
+      newalarms.push_back(Alarm(newString,newTime,newAction,newIcon));
       saveAlarms(newalarms,ALARM_DIR+ALARM_NEW);
     }
 

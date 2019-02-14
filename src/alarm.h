@@ -8,10 +8,11 @@ namespace cobra {
 
 class Alarm {
   private:
+    const char* HMS_REGEX = "^((?:[0-9]+)?)(h?)((?:[0-9]+)?)(m?)((?:[0-9]+)?)(s?)$";
     void _initAlarm();
     inline int _hmsTimeToInt(const std::string hms) const {
       std::cmatch m;
-      std::regex_match(hms.c_str(), m, std::regex("^((?:[0-9]+)?)(h?)((?:[0-9]+)?)(m?)((?:[0-9]+)?)(s?)$"));
+      std::regex_match(hms.c_str(), m, std::regex(HMS_REGEX));
       int time = 0, delta = 0;
 
       if (m[1].length() > 0) { delta = atoi(std::string(m[1]).c_str()); }
@@ -27,6 +28,7 @@ class Alarm {
     Json::Value j;
     std::string reminder;
     std::string action;
+    std::string icon;
     std::string paddedReminder;
     std::string paddedAction;
     long        remindTime;
@@ -34,7 +36,7 @@ class Alarm {
     bool        displayed;
 
     Alarm(const Json::Value jroot);
-    Alarm(const std::string reminder, const std::string timeString, const std::string action = "");
+    Alarm(const std::string reminder, const std::string timeString, const std::string action = "", const std::string icon = "");
     void showReminder(const int id) const;
     void updateData();
 };

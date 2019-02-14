@@ -2,32 +2,32 @@
 
 namespace cobra {
 
-int init_notify() {
-  notify_init("Sample");
-  // show_notification("Hello world","some message text... bla bla","notify-send 'SUCCESS Man'");
-  return 1;
+const char* REMINDER_ICON = "document-edit";
+const char* APP_NAME      = "Cobra";
+
+int init_notify() { notify_init(APP_NAME); return 1; }
+int end_notify()  { notify_uninit();       return 1; }
+
+int show_notification(std::string summary, std::string title, std::string command, std::string iconpath) {
+  return show_notification(-1,summary,title,command,iconpath);
 }
 
-int end_notify() {
-  notify_uninit();
-  return 1;
-}
+int show_notification(int id, std::string summary, std::string title, std::string command, std::string iconpath) {
 
-int show_notification(std::string summary, std::string title, std::string command) {
-  return show_notification(-1,summary,title,command);
-}
+  const char* ipath = ((iconpath.length() == 0) ? REMINDER_ICON : iconpath.c_str());
 
-int show_notification(int id, std::string summary, std::string title, std::string command) {
-  NotifyNotification* n = notify_notification_new(title.c_str(),summary.c_str(),0);
+  NotifyNotification* n = notify_notification_new(title.c_str(),summary.c_str(),ipath);
   // notify_notification_set_timeout(n, 10000); // 10 seconds
   notify_notification_set_urgency(n, NOTIFY_URGENCY_CRITICAL); // 10 seconds
 
   if (id >= 0) {  //Don't add actions for transient notifications
     std::string* spoint = new std::string(command);  //Free in handler
-    noticeData* nd = new noticeData;
-    nd->index = id;
-    nd->commandptr = spoint;
-    void* castedData = static_cast<void*>(nd);
+    std::string* mpoint = new std::string(summary);  //Free in handler
+    noticeData* nd      = new noticeData;
+    nd->index           = id;
+    nd->commandptr      = spoint;
+    nd->messageptr      = mpoint;
+    void* castedData    = static_cast<void*>(nd);
     if(spoint->length() > 0) {
       notify_notification_add_action (
         n,"actionman","Handle & Dismiss",
@@ -43,9 +43,13 @@ int show_notification(int id, std::string summary, std::string title, std::strin
       n,"snoozeman","Quick Snooze (60m)",
       quicksnoozeCallback,castedData,dismissFree
     );
+    // notify_notification_add_action (
+    //   n,"bigsnoozeman","Long Snooze (8h)",
+    //   bigsnoozeCallback,castedData,dismissFree
+    // );
     notify_notification_add_action (
-      n,"bigsnoozeman","Snooze (8h)",
-      bigsnoozeCallback,castedData,dismissFree
+      n,"customsnoozeman","Custom Snooze",
+      customsnoozeCallback,castedData,dismissFree
     );
 
     //Add handler for closed event
@@ -57,10 +61,9 @@ int show_notification(int id, std::string summary, std::string title, std::strin
     );
   }
 
-  if (!notify_notification_show(n, 0))
-  {
-      std::cerr << "show has failed" << std::endl;
-      return -1;
+  if (!notify_notification_show(n, 0)) {
+    std::cerr << "show has failed" << std::endl;
+    return -1;
   }
   return 0;
 }
@@ -85,6 +88,7 @@ void closedCallback(NotifyNotification* notice, void* data) {
   }
 
   delete [] empty;
+  saveAlarms(allAlarms,ALARM_DIR+ALARM_FILE);
 }
 
 void dismissCallback(NotifyNotification* notice, char* action, void* data) {
@@ -106,20 +110,21 @@ void handleReminderCallback(NotifyNotification* notice, char* action, void* data
   const char* command = nd.commandptr->c_str();
   system(command);  //Execute the command
   dismissCallback(notice,action,data);
-  return;
 }
 
 void handleReminderFree(void* data) {
   noticeData &nd = *(static_cast<noticeData*>(data));
   delete &(nd.commandptr);
   delete &(nd);
+  saveAlarms(allAlarms,ALARM_DIR+ALARM_FILE);
 }
 
 void snoozeCallback(NotifyNotification* notice, char* action, void* data, int snoozeTime) {
-  noticeData &nd = *(static_cast<noticeData*>(data));
-  int id = nd.index;
+  noticeData &nd           = *(static_cast<noticeData*>(data));
+  int id                   = nd.index;
   allAlarms[id].remindTime = time(NULL)+snoozeTime;
-  allAlarms[id].displayed = false;
+  allAlarms[id].displayed  = false;
+  saveAlarms(allAlarms,ALARM_DIR+ALARM_FILE);
 }
 
 void quicksnoozeCallback(NotifyNotification* notice, char* action, void* data) {
@@ -128,6 +133,12 @@ void quicksnoozeCallback(NotifyNotification* notice, char* action, void* data) {
 
 void bigsnoozeCallback(NotifyNotification* notice, char* action, void* data) {
   snoozeCallback(notice,action,data,60*60*8);  //8 hours
+}
+
+void customsnoozeCallback(NotifyNotification* notice, char* action, void* data) {
+  noticeData &nd = *(static_cast<noticeData*>(data));
+  system(("/home/pretzel/scripts/notice-remind -c \""+(*nd.commandptr)+"\" "+(*nd.messageptr)).c_str()); // myfile.sh should be chmod +x
+  dismissCallback(notice,action,data);
 }
 
 }
